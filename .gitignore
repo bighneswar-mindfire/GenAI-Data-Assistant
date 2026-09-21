@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+*.egg-info/
+.pytest_cache/
+
+# vector/db local volumes if run outside docker
+qdrant_storage/
+pgdata/

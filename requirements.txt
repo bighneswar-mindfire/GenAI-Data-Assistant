@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+pydantic-settings
+python-dotenv
+python-multipart
+
+# RAG / SQL agent (added as those features are built)
+langchain
+langgraph
+langchain-ollama
+langchain-qdrant
+qdrant-client
+sqlalchemy
+psycopg2-binary
+pypdf
+python-docx
+unstructured
