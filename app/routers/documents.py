@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from app.config import settings
 from app.schemas.documents import DocumentInfo
@@ -43,3 +43,15 @@ async def ingest_document(file: UploadFile = File(...)):
     )
     documents[doc_id] = info
     return info
+
+
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_document(document_id: str):
+    if document_id not in documents:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    documents_dir = Path(settings.documents_dir)
+    for path in documents_dir.glob(f"{document_id}.*"):
+        path.unlink()
+
+    del documents[document_id]
