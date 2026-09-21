@@ -5,6 +5,9 @@ from uuid import uuid4
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from app.config import settings
+from app.rag.chunking import chunk_text
+from app.rag.loaders import load_text
+from app.rag.vectorstore import delete_document_chunks, upsert_chunks
 from app.schemas.documents import DocumentInfo
 from app.store import documents
 
@@ -32,13 +35,26 @@ async def ingest_document(file: UploadFile = File(...)):
 
     doc_id = str(uuid4())
     content = await file.read()
-    (documents_dir / f"{doc_id}{extension}").write_bytes(content)
+    dest_path = documents_dir / f"{doc_id}{extension}"
+    dest_path.write_bytes(content)
+
+    text = load_text(dest_path)
+    chunks = chunk_text(text)
+
+    try:
+        upsert_chunks(document_id=doc_id, filename=file.filename, chunks=chunks)
+    except Exception as exc:
+        dest_path.unlink(missing_ok=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Embedding service unavailable: {exc}",
+        ) from exc
 
     info = DocumentInfo(
         id=doc_id,
         filename=file.filename,
         content_type=file.content_type or "application/octet-stream",
-        chunk_count=0,
+        chunk_count=len(chunks),
         ingested_at=datetime.now(timezone.utc),
     )
     documents[doc_id] = info
@@ -54,4 +70,5 @@ def delete_document(document_id: str):
     for path in documents_dir.glob(f"{document_id}.*"):
         path.unlink()
 
+    delete_document_chunks(document_id)
     del documents[document_id]

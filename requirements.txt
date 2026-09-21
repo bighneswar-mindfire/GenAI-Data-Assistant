@@ -4,14 +4,15 @@ pydantic-settings
 python-dotenv
 python-multipart
 
-# RAG / SQL agent (added as those features are built)
+# RAG
 langchain
-langgraph
+langchain-text-splitters
 langchain-ollama
 langchain-qdrant
 qdrant-client
-sqlalchemy
-psycopg2-binary
 pypdf
 python-docx
-unstructured
+
+langgraph
+sqlalchemy
+psycopg2-binary
