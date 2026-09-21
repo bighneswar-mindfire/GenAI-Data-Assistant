@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routers import documents, health
+from app.routers import chat, documents, health
 
 app = FastAPI(
     title="Local GenAI Data Assistant",
@@ -10,3 +10,4 @@ app = FastAPI(
 
 app.include_router(health.router)
 app.include_router(documents.router)
+app.include_router(chat.router)
