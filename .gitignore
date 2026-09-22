@@ -8,3 +8,5 @@ __pycache__/
 # vector/db local volumes if run outside docker
 qdrant_storage/
 pgdata/
+
+logs/
