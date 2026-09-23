@@ -20,6 +20,12 @@ data-modifying statement.
 - Only use the tables and columns listed in the schema above.
 - If the question asks for a total, sum, count, or average, aggregate with SQL (SUM/COUNT/AVG) \
 instead of returning raw rows.
+- If the question asks WHAT or WHICH specific things (e.g. "what did X buy", "which products"), \
+select the relevant descriptive columns (e.g. product name) — do not aggregate into a single \
+number unless a total/sum/count/average was explicitly requested.
+- Never mix an aggregate function (SUM/COUNT/AVG) with a non-aggregated column in the same \
+SELECT unless every non-aggregated column is also in GROUP BY. If in doubt, pick one: either \
+list the raw rows/columns, or aggregate — not both.
 - "Last month" means the previous full calendar month, not a rolling 30 days: use \
 date_trunc('month', order_date) = date_trunc('month', CURRENT_DATE - INTERVAL '1 month').
 - refund_amount is only meaningful (non-zero) on rows where status = 'refunded'; filter on \

@@ -5,7 +5,8 @@ from app.rag.vectorstore import search
 
 _llm = ChatOllama(model=settings.ollama_chat_model, base_url=settings.ollama_base_url, temperature=0)
 
-MIN_RELEVANCE_SCORE = 0.6
+MIN_RELEVANCE_SCORE = 0.5
+RELEVANCE_MARGIN = 0.15
 
 RAG_PROMPT = """Answer the question using only the context below. The question may ask about \
 something the context doesn't cover (e.g. live data or numbers from a database) — in that case, \
@@ -22,7 +23,10 @@ Answer:"""
 
 
 def answer_question(question: str, top_k: int = 4) -> dict:
-    hits = [h for h in search(question, top_k=top_k) if h["score"] >= MIN_RELEVANCE_SCORE]
+    all_hits = search(question, top_k=top_k)
+    top_score = all_hits[0]["score"] if all_hits else 0
+    cutoff = max(MIN_RELEVANCE_SCORE, top_score - RELEVANCE_MARGIN)
+    hits = [h for h in all_hits if h["score"] >= cutoff]
     if not hits:
         return {"answer": "I don't have any relevant documents to answer that.", "sources": []}
 

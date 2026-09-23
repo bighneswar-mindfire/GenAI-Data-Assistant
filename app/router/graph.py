@@ -4,16 +4,22 @@ from langgraph.graph import END, StateGraph
 
 from app.rag.answer import answer_question
 from app.router.classify import Route, classify
+from app.router.contextualize import contextualize
 from app.sql_agent.agent import answer_sql_question
 
 
 class ChatState(TypedDict, total=False):
     question: str
+    history: list[dict]
     route: Route
     rag_result: Optional[dict]
     sql_result: Optional[dict]
     answer: str
     sources: list[str]
+
+
+def contextualize_node(state: ChatState) -> dict:
+    return {"question": contextualize(state["question"], state.get("history", []))}
 
 
 def classify_node(state: ChatState) -> dict:
@@ -63,12 +69,14 @@ def _route_selector(state: ChatState) -> list[str]:
 
 def build_graph():
     graph = StateGraph(ChatState)
+    graph.add_node("contextualize", contextualize_node)
     graph.add_node("classify", classify_node)
     graph.add_node("rag_node", rag_node)
     graph.add_node("sql_node", sql_node)
     graph.add_node("finalize", finalize_node)
 
-    graph.set_entry_point("classify")
+    graph.set_entry_point("contextualize")
+    graph.add_edge("contextualize", "classify")
     graph.add_conditional_edges("classify", _route_selector, ["rag_node", "sql_node"])
     graph.add_edge("rag_node", "finalize")
     graph.add_edge("sql_node", "finalize")
@@ -80,6 +88,6 @@ def build_graph():
 _compiled_graph = build_graph()
 
 
-def route_question(question: str) -> dict:
-    result = _compiled_graph.invoke({"question": question})
+def route_question(question: str, history: Optional[list[dict]] = None) -> dict:
+    result = _compiled_graph.invoke({"question": question, "history": history or []})
     return {"answer": result["answer"], "sources": result.get("sources", [])}
