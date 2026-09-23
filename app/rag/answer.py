@@ -7,8 +7,11 @@ _llm = ChatOllama(model=settings.ollama_chat_model, base_url=settings.ollama_bas
 
 MIN_RELEVANCE_SCORE = 0.6
 
-RAG_PROMPT = """Answer the question using only the context below. \
-If the answer isn't in the context, say you don't know.
+RAG_PROMPT = """Answer the question using only the context below. The question may ask about \
+something the context doesn't cover (e.g. live data or numbers from a database) — in that case, \
+give the full, specific answer (not just a vague reference) for the part the context does cover, \
+and simply omit the part it doesn't, without apologizing or mentioning what's missing. Only say \
+you don't know if NONE of the question is answerable from the context.
 
 Context:
 {context}

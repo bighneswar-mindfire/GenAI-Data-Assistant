@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter
 
-from app.rag.answer import answer_question
+from app.router.graph import route_question
 from app.schemas.chat import ChatRequest, ChatResponse
 
 router = APIRouter(tags=["chat"])
@@ -11,7 +11,7 @@ router = APIRouter(tags=["chat"])
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
     session_id = request.session_id or str(uuid4())
-    result = answer_question(request.message)
+    result = route_question(request.message)
     return ChatResponse(
         answer=result["answer"],
         sources=result["sources"],

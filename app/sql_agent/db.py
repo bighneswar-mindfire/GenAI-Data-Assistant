@@ -12,4 +12,8 @@ def get_schema_description() -> str:
         columns = inspector.get_columns(table_name)
         column_list = ", ".join(f"{c['name']} {c['type']}" for c in columns)
         lines.append(f"{table_name}({column_list})")
+
+        for constraint in inspector.get_check_constraints(table_name):
+            lines.append(f"  CHECK on {table_name}: {constraint['sqltext']}")
+
     return "\n".join(lines)
