@@ -35,7 +35,7 @@ async def ingest_document(file: UploadFile = File(...)):
     content = await file.read()
     if len(content) > MAX_FILE_SIZE_BYTES:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail=f"File exceeds the {MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB limit",
         )
 

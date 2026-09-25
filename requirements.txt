@@ -16,3 +16,6 @@ python-docx
 langgraph
 sqlalchemy
 psycopg2-binary
+
+# tests
+pytest
