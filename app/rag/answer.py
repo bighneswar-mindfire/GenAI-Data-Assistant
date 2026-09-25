@@ -1,9 +1,7 @@
-from langchain_ollama import ChatOllama
-
-from app.config import settings
+from app.llm import get_chat_llm
 from app.rag.vectorstore import search
 
-_llm = ChatOllama(model=settings.ollama_chat_model, base_url=settings.ollama_base_url, temperature=0)
+_llm = get_chat_llm()
 
 MIN_RELEVANCE_SCORE = 0.5
 RELEVANCE_MARGIN = 0.15

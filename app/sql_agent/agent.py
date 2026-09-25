@@ -1,14 +1,12 @@
 import json
 
-from langchain_ollama import ChatOllama
-
-from app.config import settings
+from app.llm import get_chat_llm
 from app.sql_agent.executor import execute_select
 from app.sql_agent.generate import generate_sql, regenerate_sql
 from app.sql_agent.query_log import log_query
 from app.sql_agent.validate import validate_select_only
 
-_llm = ChatOllama(model=settings.ollama_chat_model, base_url=settings.ollama_base_url, temperature=0)
+_llm = get_chat_llm()
 
 ANSWER_PROMPT = """Answer the user's question using only the query result data below. \
 Do not invent or alter any numbers.

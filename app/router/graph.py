@@ -19,15 +19,27 @@ class ChatState(TypedDict, total=False):
 
 
 def contextualize_node(state: ChatState) -> dict:
-    return {"question": contextualize(state["question"], state.get("history", []))}
+    try:
+        question = contextualize(state["question"], state.get("history", []))
+    except Exception:
+        question = state["question"]
+    return {"question": question}
 
 
 def classify_node(state: ChatState) -> dict:
-    return {"route": classify(state["question"])}
+    try:
+        route = classify(state["question"])
+    except Exception:
+        route = "combined"
+    return {"route": route}
 
 
 def rag_node(state: ChatState) -> dict:
-    return {"rag_result": answer_question(state["question"])}
+    try:
+        result = answer_question(state["question"])
+    except Exception as exc:
+        result = {"answer": f"I couldn't search the documents: {exc}", "sources": []}
+    return {"rag_result": result}
 
 
 def sql_node(state: ChatState) -> dict:

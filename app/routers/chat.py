@@ -1,15 +1,16 @@
 from uuid import uuid4
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.conversation import append_turn, get_history
+from app.rate_limit import rate_limit
 from app.router.graph import route_question
 from app.schemas.chat import ChatRequest, ChatResponse
 
 router = APIRouter(tags=["chat"])
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse, dependencies=[Depends(rate_limit)])
 def chat(request: ChatRequest):
     session_id = request.session_id or str(uuid4())
     history = get_history(session_id)

@@ -1,8 +1,6 @@
-from langchain_ollama import ChatOllama
+from app.llm import get_chat_llm
 
-from app.config import settings
-
-_llm = ChatOllama(model=settings.ollama_chat_model, base_url=settings.ollama_base_url, temperature=0)
+_llm = get_chat_llm()
 
 CONTEXTUALIZE_PROMPT = """Given the conversation history and a follow-up question, rewrite the \
 follow-up question as a standalone question that includes any necessary context from the \

@@ -1,9 +1,8 @@
 from typing import Literal
 
-from langchain_ollama import ChatOllama
 from pydantic import BaseModel, Field
 
-from app.config import settings
+from app.llm import get_chat_llm
 
 Route = Literal["document", "sql", "combined"]
 
@@ -12,7 +11,7 @@ class RouteDecision(BaseModel):
     route: Route = Field(description="Which system should answer the question")
 
 
-_llm = ChatOllama(model=settings.ollama_chat_model, base_url=settings.ollama_base_url, temperature=0)
+_llm = get_chat_llm()
 _classifier = _llm.with_structured_output(RouteDecision, method="function_calling")
 
 CLASSIFY_PROMPT = """Classify the question below into exactly one category:

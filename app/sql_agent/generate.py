@@ -1,11 +1,9 @@
 import re
 
-from langchain_ollama import ChatOllama
-
-from app.config import settings
+from app.llm import get_chat_llm
 from app.sql_agent.db import get_schema_description
 
-_llm = ChatOllama(model=settings.ollama_chat_model, base_url=settings.ollama_base_url, temperature=0)
+_llm = get_chat_llm()
 
 SQL_PROMPT = """You are a PostgreSQL expert. Given the database schema below, write a single \
 read-only SQL query that answers the question.

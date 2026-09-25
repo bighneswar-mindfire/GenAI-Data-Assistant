@@ -1,6 +1,5 @@
 from uuid import uuid4
 
-from langchain_ollama import OllamaEmbeddings
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
@@ -12,11 +11,12 @@ from qdrant_client.models import (
 )
 
 from app.config import settings
+from app.llm import get_embeddings
 
 COLLECTION_NAME = "documents"
 
-_client = QdrantClient(url=settings.qdrant_url)
-_embeddings = OllamaEmbeddings(model=settings.ollama_embed_model, base_url=settings.ollama_base_url)
+_client = QdrantClient(url=settings.qdrant_url, timeout=30)
+_embeddings = get_embeddings()
 
 
 def _ensure_collection(vector_size: int) -> None:

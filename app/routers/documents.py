@@ -2,18 +2,20 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from app.config import settings
 from app.rag.chunking import chunk_text
 from app.rag.loaders import load_text
 from app.rag.vectorstore import delete_document_chunks, upsert_chunks
+from app.rate_limit import rate_limit
 from app.schemas.documents import DocumentInfo
 from app.store import documents
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
+MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024
 
 
 @router.get("", response_model=list[DocumentInfo])
@@ -21,7 +23,7 @@ def list_documents():
     return list(documents.values())
 
 
-@router.post("/ingest", response_model=DocumentInfo)
+@router.post("/ingest", response_model=DocumentInfo, dependencies=[Depends(rate_limit)])
 async def ingest_document(file: UploadFile = File(...)):
     extension = Path(file.filename).suffix.lower()
     if extension not in ALLOWED_EXTENSIONS:
@@ -30,16 +32,36 @@ async def ingest_document(file: UploadFile = File(...)):
             detail=f"Unsupported file type '{extension}'. Allowed: {sorted(ALLOWED_EXTENSIONS)}",
         )
 
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File exceeds the {MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB limit",
+        )
+
     documents_dir = Path(settings.documents_dir)
     documents_dir.mkdir(parents=True, exist_ok=True)
 
     doc_id = str(uuid4())
-    content = await file.read()
     dest_path = documents_dir / f"{doc_id}{extension}"
     dest_path.write_bytes(content)
 
-    text = load_text(dest_path)
+    try:
+        text = load_text(dest_path)
+    except Exception as exc:
+        dest_path.unlink(missing_ok=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not read file contents: {exc}",
+        ) from exc
+
     chunks = chunk_text(text)
+    if not chunks:
+        dest_path.unlink(missing_ok=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No extractable text found in file",
+        )
 
     try:
         upsert_chunks(document_id=doc_id, filename=file.filename, chunks=chunks)
